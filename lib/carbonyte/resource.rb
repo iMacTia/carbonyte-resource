@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json_api_client'
+require 'request_store'
 require 'carbonyte/resource/middleware'
 require 'carbonyte/resource/connection'
 require 'carbonyte/resource/base'

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'request_store'
-
 module Carbonyte
   module Resource
     module Middleware

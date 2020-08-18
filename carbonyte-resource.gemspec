@@ -15,6 +15,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = Gem::Requirement.new('>= 2.5.0')
 
+  spec.add_dependency 'carbonyte-support'
   spec.add_dependency 'json_api_client', '~> 1.16'
   spec.add_dependency 'request_store', '~> 1.5'
 
