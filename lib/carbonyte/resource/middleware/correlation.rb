@@ -7,8 +7,8 @@ module Carbonyte
       class Correlation < Faraday::Middleware
         attr_reader :header_key
 
-        def initialize(app, key = 'X-Correlation-Id')
-          @header_key = key
+        def initialize(app, key = nil)
+          @header_key = key || 'X-Correlation-Id'
           super(app)
         end
 

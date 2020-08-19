@@ -10,15 +10,19 @@ module Carbonyte
       class Logging < Faraday::Middleware
         attr_reader :header_key, :logger, :log_level
 
-        def initialize(app, logger = nil, log_level: :info)
-          @logger = logger.dup || ::Logger.new($stdout)
+        LOG_TYPE = 'RESOURCE_FETCH'
+
+        def initialize(app, options = {})
+          @logger = options[:logger].dup || ::Logger.new($stdout)
           @logger.formatter = Carbonyte::Support::Logging::LogstashFormatter.new
-          @log_level = validate_log_level(log_level)
+          @log_level = validate_log_level(options[:log_level] || :info)
           super(app)
         end
 
         def call(env)
-          super
+          @app.call(env)
+        rescue StandardError => e
+          @raised_exception = e
         ensure
           log(env)
         end
@@ -33,13 +37,16 @@ module Carbonyte
             event.merge!(debug_response_data(env))
           end
 
+          event.merge!(exception_data(@raised_exception)) if @raised_exception
+
           logger.public_send(log_level, event)
         end
 
         def info_data(env)
           {
+            type: LOG_TYPE,
             correlation_id: correlation_id,
-            method: env[:method],
+            method: env[:method]&.upcase,
             url: env[:url],
             status: env[:status],
             reason_phrase: env[:reason_phrase]
@@ -55,8 +62,18 @@ module Carbonyte
 
         def debug_response_data(env)
           {
-            response_headers: env[:request_headers],
-            response_body: env[:request_body]
+            response_headers: env[:response_headers],
+            response_body: env[:response_body]
+          }
+        end
+
+        def exception_data(exc)
+          {
+            rescued_exception: {
+              name: exc.class.name,
+              message: exc.message,
+              backtrace: %('#{Array(exc.backtrace.first(10)).join("\n\t")}')
+            }
           }
         end
 
